@@ -1,0 +1,10 @@
+services:
+  api:
+    image: catalog-api
+    build: .
+    environment:
+      PORT: "3000"
+      GC_PROJECT_ID: "peaksellchromeextension"
+      FIRESTORE_DATABASE: "nip-catalogs"
+    ports:
+      - "3000:3000"

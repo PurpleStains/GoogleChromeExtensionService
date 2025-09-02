@@ -1,0 +1,18 @@
+{
+  "name": "catalog-api-firestore",
+  "version": "1.0.0",
+  "description": "Simple Catalog API on Firestore for Cloud Run",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:dev": "NODE_ENV=development node server.js"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.19.2",
+    "morgan": "^1.10.0"
+  }
+}
