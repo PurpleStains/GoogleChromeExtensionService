@@ -94,5 +94,5 @@ app.post("/unsend-catalog", async (req, res) => {
 })
 
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`Server listening on port ${PORT}, version ${2025}`);
 });
