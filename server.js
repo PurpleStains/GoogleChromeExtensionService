@@ -93,6 +93,29 @@ app.post("/unsend-catalog", async (req, res) => {
     }
 })
 
+// GET /catalogs
+app.get("/catalogs", async (req, res) => {
+    try {
+        const snapshot = await catalogs.get();
+        const allCatalogs = [];
+
+        snapshot.forEach(doc => {
+            allCatalogs.push({
+                nip: doc.id,
+                ...doc.data()
+            });
+        });
+
+        return res.json({
+            count: allCatalogs.length,
+            catalogs: allCatalogs
+        });
+    } catch (err) {
+        console.error("GET /catalogs error:", err);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });
