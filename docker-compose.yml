@@ -3,8 +3,11 @@ services:
     image: catalog-api
     build: .
     environment:
-      PORT: "3000"
+      PORT: "8080"
+      NODE_ENV: "production"
       GC_PROJECT_ID: "peaksellchromeextension"
       FIRESTORE_DATABASE: "nip-catalogs"
+      CLIENT_ID: "${CLIENT_ID}"
+      CLIENT_SECRET: "${CLIENT_SECRET}"
     ports:
-      - "3000:3000"
+      - "8080:8080"
