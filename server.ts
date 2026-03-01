@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { Firestore, FieldValue } from "@google-cloud/firestore";
+import allegroAuthRouter from './authorization-allegro/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -16,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
-const isValidNip = (nip) => /^\d{10}$/.test(String(nip || ""));
+const isValidNip = (nip: string) => /^\d{10}$/.test(String(nip || ""));
 
 app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 app.get("/", (_req, res) => res.json({ service: "catalog-api-firestore", status: "ok" }));
@@ -28,7 +29,7 @@ app.get("/has-send-catalog", async (req, res) => {
         if (!isValidNip(nip)) return res.status(400).json({ error: "Invalid NIP (must be 10 digits)" });
 
         const doc = await catalogs.doc(nip).get();
-        const hasSend = doc.exists ? !!doc.data().hasSend : false;
+        const hasSend = doc.exists ? !!doc.data()?.hasSend : false;
         return res.json({ nip, hasSend });
     } catch (err) {
         console.error("GET /has-send-catalog error:", err);
@@ -57,7 +58,7 @@ app.post("/send-catalog", async (req, res) => {
         return res.json({
             message: "Catalog marked as sent",
             nip,
-            hasSend: !!updated.data().hasSend
+            hasSend: !!updated?.data()?.hasSend
         });
     } catch (err) {
         console.error("POST /send-catalog error:", err);
@@ -85,7 +86,7 @@ app.post("/unsend-catalog", async (req, res) => {
         return res.json({
             message: "Catalog marked as unsent",
             nip,
-            hasSend: !!updated.data().hasSend
+            hasSend: !!updated?.data()?.hasSend
         });
     } catch (err) {
         console.error("POST /unsend-catalog error:", err);
@@ -97,7 +98,7 @@ app.post("/unsend-catalog", async (req, res) => {
 app.get("/catalogs", async (req, res) => {
     try {
         const snapshot = await catalogs.get();
-        const allCatalogs = [];
+        const allCatalogs: any[] = [];
 
         snapshot.forEach(doc => {
             allCatalogs.push({
@@ -116,6 +117,10 @@ app.get("/catalogs", async (req, res) => {
     }
 });
 
+app.use("/allegro", allegroAuthRouter)
+
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });
+
+
