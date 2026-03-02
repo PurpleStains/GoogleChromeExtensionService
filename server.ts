@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { Firestore, FieldValue } from "@google-cloud/firestore";
 import allegroAuthRouter from './authorization-allegro/index.js';
+import allegroClientsRouter from './allegro-clients/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -118,6 +119,7 @@ app.get("/catalogs", async (req, res) => {
 });
 
 app.use("/allegro", allegroAuthRouter)
+app.use("/allegro-client", allegroClientsRouter)
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

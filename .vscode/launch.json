@@ -12,6 +12,22 @@
       "outFiles": ["${workspaceFolder}/dist/**/*.js"]
     },
     {
+      "name": "Debug Token Storage Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "test",
+        "--",
+        "authorization-allegro/storage/token/token-storage.spec.ts",
+        "--runInBand",
+        "--no-cache"
+      ],
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Launch via NPM",
       "type": "node",
       "request": "launch",
