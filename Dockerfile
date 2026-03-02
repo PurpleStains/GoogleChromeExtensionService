@@ -30,13 +30,6 @@ RUN npm ci --omit=dev
 # Kopiuj zbudowane pliki z poprzedniego stage'a
 COPY --from=builder /usr/src/app/dist ./dist
 
-# Zmienne środowiskowe
-# ENV NODE_ENV=production \
-#     PORT=8080 \
-#     GC_PROJECT_ID=peaksellchromeextension \
-#     SERVICE_API_URL_PROD=https://catalog-api-163413146123.us-central1.run.app \
-#     FIRESTORE_DATABASE=nip-catalogs
-
 EXPOSE 8080
 
 # Uruchom bezpośrednio zbudowany plik (bez rebuildu)
