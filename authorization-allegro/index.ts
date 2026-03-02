@@ -10,8 +10,8 @@ const allegroAuthRouter = Router();
 const AUTH_URL = "https://allegro.pl/auth/oauth/authorize";
 const TOKEN_URL = "https://allegro.pl/auth/oauth/token";
 const REDIRECT_URI = process.env.NODE_ENV === 'production'
-    ? "https://peaksell-ui-163413146123.europe-west1.run.app/allegro/callback"
-    : "http://localhost:3000/allegro/callback";
+    ? `${process.env.SERVICE_API_URL_PROD}/allegro/callback`
+    : `${process.env.SERVICE_API_URL_LOCAL}/allegro/callback`;
 
 const codeVerifier = generateCodeVerifier();
 

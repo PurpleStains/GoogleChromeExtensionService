@@ -9,5 +9,6 @@ services:
       FIRESTORE_DATABASE: "nip-catalogs"
       CLIENT_ID: "${CLIENT_ID}"
       CLIENT_SECRET: "${CLIENT_SECRET}"
+      SERVICE_API_URL_PROD: "${SERVICE_API_URL_PROD}"
     ports:
       - "8080:8080"
