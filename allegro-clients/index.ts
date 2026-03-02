@@ -6,13 +6,15 @@ import { ClientData } from "../authorization-allegro/types/client.type.js";
 const allegroClientsRouter = Router();
 
 allegroClientsRouter.get("/clients", async (_req: Request, res: Response) => {
-    const clients = await GetClients();
-
-    if (clients.isFailure()) {
-        return res.status(404).json({ error: clients.getError()?.message });
+    const clientsResult = await GetClients();
+    if (clientsResult.isFailure()) {
+        return res.status(404).json({ error: clientsResult.getError()?.message });
     }
 
-    res.json(clients.getValue());
+    let response = []
+    const clients = clientsResult.getValue();
+
+    res.json(clientsResult.getValue());
 });
 
 allegroClientsRouter.post("/create-client", async (req: Request, res: Response) => {

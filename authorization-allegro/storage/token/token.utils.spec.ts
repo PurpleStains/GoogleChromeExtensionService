@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { prepareToken } from './token.utils.js';
-import { AllegroTokenResponse } from '../../types/token.type.js';
+import { prepareToken, isTokenExpired } from './token.utils.js';
+import { AllegroTokenResponse, AllegroTokenInternal } from '../../types/token.type.js';
+import { Timestamp } from '@google-cloud/firestore';
 
 describe('prepareToken', () => {
     const MOCK_NOW = new Date('2026-03-02T12:00:00.000Z').getTime();
@@ -38,7 +39,7 @@ describe('prepareToken', () => {
         };
 
         const result = prepareToken(tokenResponse);
-        const expectedExpiry = new Date('2026-03-02T13:00:00.000Z');
+        const expectedExpiry = new Timestamp((MOCK_NOW / 1000) + 3600, 0);
 
         expect(result.expiresIn).toEqual(expectedExpiry);
     });
@@ -53,7 +54,7 @@ describe('prepareToken', () => {
         };
 
         const result = prepareToken(tokenResponse);
-        const expectedExpiry = new Date('2026-03-02T12:00:00.000Z');
+        const expectedExpiry = new Timestamp((MOCK_NOW / 1000), 0);
 
         expect(result.expiresIn).toEqual(expectedExpiry);
     });
@@ -68,7 +69,7 @@ describe('prepareToken', () => {
         };
 
         const result = prepareToken(tokenResponse);
-        const expectedExpiry = new Date('2026-03-03T12:00:00.000Z');
+        const expectedExpiry = new Timestamp((MOCK_NOW / 1000) + 86400, 0);
 
         expect(result.expiresIn).toEqual(expectedExpiry);
     });
@@ -83,7 +84,7 @@ describe('prepareToken', () => {
         };
 
         const result = prepareToken(tokenResponse);
-        const expectedExpiry = new Date('2026-03-02T11:00:00.000Z');
+        const expectedExpiry = new Timestamp((MOCK_NOW / 1000) - 3600, 0);
 
         expect(result.expiresIn).toEqual(expectedExpiry);
     });
@@ -119,3 +120,42 @@ describe('prepareToken', () => {
         expect(result1.expiresIn).toEqual(result2.expiresIn);
     });
 });
+
+describe('isTokenExpired', () => {
+    it('should return false for a token that is expired', () => {
+        const date = new Date().getTime();
+        console.log('Current time in seconds:', date / 1000);
+        const futureDate = new Timestamp(Math.floor(new Date().getTime() / 1000 - 3600), 0); // 1 hour in the future
+        const token: AllegroTokenInternal = {
+            accessToken: 'token',
+            refreshToken: 'refresh',
+            expiresIn: futureDate
+        };
+
+        const result = isTokenExpired(token);
+        expect(result).toBe(true);
+    });
+
+    it('should return true for a token that is expired', () => {
+        const pastDate = new Timestamp((Math.floor(new Date().getTime() / 1000)) + 3600, 0); // 1 hour in the past
+        const token: AllegroTokenInternal = {
+            accessToken: 'token',
+            refreshToken: 'refresh',
+            expiresIn: pastDate
+        };
+
+        const result = isTokenExpired(token);
+        expect(result).toBe(false);
+    });
+
+    it('should return true for a token that expires exactly at the current time', () => {
+        const now = new Timestamp(Math.floor(new Date().getTime() / 1000), 0);
+        const token: AllegroTokenInternal = {
+            accessToken: 'token',
+            refreshToken: 'refresh',
+            expiresIn: now
+        };
+        const result = isTokenExpired(token);
+        expect(result).toBe(true);
+    });
+})

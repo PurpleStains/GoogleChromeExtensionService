@@ -4,8 +4,9 @@ export type AllegroClient = {
 
 export type ClientResponse = {
     clientLogin: string;
+    isAuthorized: boolean;
 }
 
 export type ClientsResponse = {
-    clients: AllegroClient[];
+    clients: ClientResponse[];
 }

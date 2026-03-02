@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { Firestore, FieldValue } from "@google-cloud/firestore";
 import allegroAuthRouter from './authorization-allegro/index.js';
 import allegroClientsRouter from './allegro-clients/index.js';
+import { clearTokens } from './authorization-allegro/storage/token/token-storage.js';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -117,6 +118,15 @@ app.get("/catalogs", async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+app.delete("/clear-tokens", async (_req, res) => {
+    const result = await clearTokens();
+    if (result.isFailure()) {
+        return res.status(500).json({ error: "Failed to clear tokens", details: result.getError()?.message });
+    }
+    return res.status(200).json({ message: "Tokens cleared successfully" });
+});
+
 
 app.use("/allegro", allegroAuthRouter)
 app.use("/allegro-client", allegroClientsRouter)

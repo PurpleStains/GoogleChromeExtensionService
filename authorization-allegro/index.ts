@@ -1,8 +1,10 @@
 import { Router, Request, Response } from "express";
 import { generateCodeChallenge, generateCodeVerifier } from "./utils/authorization.utils.js";
 import crypto from "crypto";
-import { GetClient } from "./storage/clients/clients-storage.js";
+import { GetClient, SetClientAuthorizationStatus } from "./storage/clients/clients-storage.js";
 import { AllegroTokenResponse } from "./types/token.type.js";
+import { getToken, saveToken } from "./storage/token/token-storage.js";
+import { prepareToken } from "./storage/token/token.utils.js";
 
 const allegroAuthRouter = Router();
 const AUTH_URL = "https://allegro.pl/auth/oauth/authorize";
@@ -10,6 +12,8 @@ const TOKEN_URL = "https://allegro.pl/auth/oauth/token";
 const REDIRECT_URI = process.env.NODE_ENV === 'production'
     ? "https://peaksell-ui-163413146123.europe-west1.run.app/callback"
     : "http://localhost:3000/allegro/callback";
+
+const codeVerifier = generateCodeVerifier();
 
 allegroAuthRouter.get("/authorize", async (req: Request, res: Response) => {
     const { client_login } = req.query;
@@ -21,7 +25,6 @@ allegroAuthRouter.get("/authorize", async (req: Request, res: Response) => {
 
     const clientDetails = result.getValue();
 
-    const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
     const state = crypto.randomBytes(16).toString('hex');
 
@@ -49,18 +52,22 @@ allegroAuthRouter.get("/callback", async (req: Request, res: Response) => {
     if (client.isFailure()) {
         return res.status(404).json({ error: client.getError()?.message });
     }
+
     const clientData = client.getValue();
+
+    const credentials = Buffer.from(`${clientData?.clientId}:${clientData?.clientSecret}`).toString('base64');
 
     const params = new URLSearchParams({
         grant_type: 'authorization_code',
-        code,
+        code: code,
         redirect_uri: REDIRECT_URI,
-        client_id: clientData?.clientId ?? "",
+        code_verifier: codeVerifier,
     });
 
     const resp = await fetch(TOKEN_URL, {
         method: 'POST',
         headers: {
+            Authorization: `Basic ${credentials}`,
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: params.toString(),
@@ -68,20 +75,26 @@ allegroAuthRouter.get("/callback", async (req: Request, res: Response) => {
 
     if (!resp.ok) {
         const errorText = await resp.text();
+        await SetClientAuthorizationStatus(clientLogin, false);
         return res.status(resp.status).json({ error: `Token request failed: ${errorText}` });
     }
 
-    const json = await resp.json() as AllegroTokenResponse;
+    const tokenResponse = await resp.json() as AllegroTokenResponse;
 
-    if (!json.access_token) {
+    if (!tokenResponse.access_token) {
+        await SetClientAuthorizationStatus(clientLogin, false);
         return res.status(400).json({ error: "Token response missing access_token" });
     }
 
+    const tokenData = prepareToken(tokenResponse);
+
+    await saveToken(clientLogin, tokenData);
+    await SetClientAuthorizationStatus(clientLogin, true);
     return res.status(200).json({ message: "Authorization successful, you can close this window now." });
 });
 
 allegroAuthRouter.post("/refresh", async (req: Request, res: Response) => {
-    const { refresh_token } = req.body;
+    const { client_login, refresh_token } = req.body;
 
     const credentials = Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64');
     const params = new URLSearchParams({

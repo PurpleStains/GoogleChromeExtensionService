@@ -1,3 +1,5 @@
+import { Timestamp } from "@google-cloud/firestore";
+
 export type AllegroTokenResponse = {
     access_token: string,
     allegro_api: boolean,
@@ -9,7 +11,7 @@ export type AllegroTokenResponse = {
 export type AllegroTokenInternal = {
     accessToken: string;
     refreshToken: string;
-    expiresIn: Date;
+    expiresIn: Timestamp;
 }
 
 export type TokenResponse = {
