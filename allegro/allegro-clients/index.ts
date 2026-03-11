@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Request, Response } from "express";
-import { GetClients, CreateClient } from "../authorization-allegro/storage/clients/clients-storage.js";
 import { ClientData } from "../authorization-allegro/types/client.type.js";
+import { CreateClient, GetClients } from "../authorization-allegro/storage/clients/clients-storage.js";
 
 const allegroClientsRouter = Router();
 
@@ -10,9 +10,6 @@ allegroClientsRouter.get("/clients", async (_req: Request, res: Response) => {
     if (clientsResult.isFailure()) {
         return res.status(404).json({ error: clientsResult.getError()?.message });
     }
-
-    let response = []
-    const clients = clientsResult.getValue();
 
     res.json(clientsResult.getValue());
 });

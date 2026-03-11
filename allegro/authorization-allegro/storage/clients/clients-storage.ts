@@ -1,10 +1,10 @@
 import { ClientData, ClientDataUpdate } from "../../types/client.type.js";
-import { Result } from "../../../shared/result-pattern.js";
-import { ClientResponse, ClientsResponse } from "../../../allegro-clients/types/index.js";
-import { clientsFirestoreDatabaseContext } from "../../../database/clients-repository.js";
+import { Result } from "../../../../shared/result-pattern.js";
+import { clientsFirestoreDatabaseContext } from "../../../../database/clients-repository.js";
 import { get } from "http";
 import { getToken } from "../token/token-storage.js";
 import { isTokenExpired } from "../token/token.utils.js";
+import { ClientsResponse } from "../../../allegro-clients/types/index.js";
 
 const CLIENTS_DOC_ID = "clients-list";
 

@@ -3,9 +3,10 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { Firestore, FieldValue } from "@google-cloud/firestore";
-import allegroAuthRouter from './authorization-allegro/index.js';
-import allegroClientsRouter from './allegro-clients/index.js';
-import { clearTokens } from './authorization-allegro/storage/token/token-storage.js';
+import allegroAuthRouter from './allegro/authorization-allegro/index.js';
+import { clearTokens } from './allegro/authorization-allegro/storage/token/token-storage.js';
+import allegroClientsRouter from './allegro/allegro-clients/index.js';
+import allegroCustomerMessagesRouter from './allegro/customers-messages/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -130,6 +131,7 @@ app.delete("/clear-tokens", async (_req, res) => {
 
 app.use("/allegro", allegroAuthRouter)
 app.use("/allegro-client", allegroClientsRouter)
+app.use("/allegro-messages", allegroCustomerMessagesRouter)
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

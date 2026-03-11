@@ -3,8 +3,9 @@ import { generateCodeChallenge, generateCodeVerifier } from "./utils/authorizati
 import crypto from "crypto";
 import { GetClient, SetClientAuthorizationStatus } from "./storage/clients/clients-storage.js";
 import { AllegroTokenResponse } from "./types/token.type.js";
-import { getToken, saveToken } from "./storage/token/token-storage.js";
+import { saveToken } from "./storage/token/token-storage.js";
 import { prepareToken } from "./storage/token/token.utils.js";
+import { refreshAndSaveToken } from "./refresh-token/refresh-token.js";
 
 const allegroAuthRouter = Router();
 const AUTH_URL = "https://allegro.pl/auth/oauth/authorize";
@@ -94,27 +95,12 @@ allegroAuthRouter.get("/callback", async (req: Request, res: Response) => {
 });
 
 allegroAuthRouter.post("/refresh", async (req: Request, res: Response) => {
-    const { client_login, refresh_token } = req.body;
-
-    const credentials = Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64');
-    const params = new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token,
-    });
-
-    const r = await fetch("https://allegro.pl/auth/oauth/token", {
-        method: "POST",
-        headers: {
-            Authorization: `Basic ${credentials}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: params.toString(),
-    });
-
-    const text = await r.text();
-    if (!r.ok) return res.status(r.status).send(text);
-
-    res.type("application/json").send(text);
+    const { client_login } = req.body;
+    const result = await refreshAndSaveToken(client_login as string);
+    if (result.isFailure()) {
+        return res.status(400).json({ error: result.getError()?.message });
+    }
+    return res.status(200).json({ message: "Token refreshed successfully." });
 });
 
 export default allegroAuthRouter;
