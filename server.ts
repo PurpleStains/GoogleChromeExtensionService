@@ -16,7 +16,26 @@ const catalogsId = process.env.FIRESTORE_DATABASE || "";
 const db = new Firestore({ projectId: projectId, databaseId: catalogsId });
 const catalogs = db.collection(catalogsId);
 
-app.use(cors());
+const allowedOrigins = [
+    "chrome-extension://*",
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "*"
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true); // non-browser clients (e.g. curl)
+        if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error("CORS policy: origin not allowed"));
+    },
+    credentials: false,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+}));
+app.options("*", cors({ origin: true, credentials: false }));
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
