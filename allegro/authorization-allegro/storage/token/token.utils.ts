@@ -1,6 +1,5 @@
 import { Timestamp } from "@google-cloud/firestore";
-import { AllegroTokenInternal, AllegroTokenResponse } from "../../types/token.type.js";
-
+import { AllegroTokenInternal, AllegroTokenResponse } from "../../../../src/infrastructure/allegro/allegro.types.js";
 export const prepareToken = (tokenResponse: AllegroTokenResponse): AllegroTokenInternal => {
     const expiresIn = new Timestamp(Math.floor((Date.now() + tokenResponse.expires_in * 1000) / 1000), 0);
 

@@ -19,3 +19,29 @@ export type TokenResponse = {
     refresh_token: string;
     expires_in: number;
 }
+
+export type AllegroClient = {
+    clientLogin: string;
+}
+
+export type ClientResponse = {
+    clientLogin: string;
+    isAuthorized: boolean;
+}
+
+export type ClientsResponse = {
+    clients: ClientResponse[];
+}
+
+export type ClientData = {
+    clientLogin: string;
+    clientId: string;
+    clientSecret: string;
+    isAuthorized?: boolean;
+}
+
+export type ClientDataUpdate = {
+    clientLogin: string;
+    isAuthorized: boolean;
+}
+

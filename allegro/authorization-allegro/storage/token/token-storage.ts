@@ -1,6 +1,6 @@
-import { tokensFirestoreDatabaseContext } from "../../../../database/tokens-repository.js";
+import { tokensFirestoreDatabaseContext } from "../../../../database/tokens.db.js";
 import { Result } from "../../../../shared/result-pattern.js";
-import { AllegroTokenInternal, AllegroTokenResponse } from "../../types/token.type.js";
+import { AllegroTokenInternal } from "../../../../src/infrastructure/allegro/allegro.types.js";
 
 const TOKENS_ID = "tokens-list";
 let getTokensDbContext = tokensFirestoreDatabaseContext;

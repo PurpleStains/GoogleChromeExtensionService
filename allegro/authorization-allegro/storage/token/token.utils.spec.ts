@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { prepareToken, isTokenExpired } from './token.utils.js';
-import { AllegroTokenResponse, AllegroTokenInternal } from '../../types/token.type.js';
 import { Timestamp } from '@google-cloud/firestore';
+import { AllegroTokenInternal, AllegroTokenResponse } from '../../../../src/infrastructure/allegro/allegro.types.js';
 
 describe('prepareToken', () => {
     const MOCK_NOW = new Date('2026-03-02T12:00:00.000Z').getTime();

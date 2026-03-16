@@ -1,8 +1,8 @@
 import { Result } from "../../../../shared/result-pattern.js";
-import { AllegroTokenInternal } from "../../types/token.type.js";
 import { getToken } from "./token-storage.js";
 import { isTokenExpired, prepareToken } from "./token.utils.js";
 import { refreshAndSaveToken } from "../../refresh-token/refresh-token.js";
+import { AllegroTokenInternal } from "../../../../src/infrastructure/allegro/allegro.types.js";
 
 export const getValidToken = async (clientLogin: string): Promise<Result<AllegroTokenInternal>> => {
     const getTokenResult = await getToken(clientLogin);

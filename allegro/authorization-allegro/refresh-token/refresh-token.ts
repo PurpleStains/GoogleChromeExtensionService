@@ -1,8 +1,9 @@
 import { getToken, saveToken } from "../storage/token/token-storage.js";
-import { AllegroTokenResponse } from "../types/token.type.js";
 import { GetClient } from "../storage/clients/clients-storage.js";
 import { Result } from "../../../shared/result-pattern.js";
 import { prepareToken } from "../storage/token/token.utils.js";
+import { AllegroTokenResponse } from "../../../src/infrastructure/allegro/allegro.types.js";
+import { allegroAxiosInstance } from "../../../src/infrastructure/allegro/allegro.client.js";
 
 export const refreshAndSaveToken = async (clientLogin: string): Promise<Result<AllegroTokenResponse>> => {
     const clientResult = await GetClient(clientLogin as string);
@@ -23,17 +24,11 @@ export const refreshAndSaveToken = async (clientLogin: string): Promise<Result<A
         refresh_token: token.getValue()?.refreshToken ?? "",
     });
 
-    const response = await fetch("https://allegro.pl/auth/oauth/token", {
-        method: "POST",
-        headers: {
-            Authorization: `Basic ${credentials}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: params.toString(),
-    });
+    const httpClient = allegroAxiosInstance(credentials);
+    const response = await httpClient.post(`auth/oauth/token`, params.toString());
 
-    const responseBody = await response.json();
-    if (!response.ok) {
+    const responseBody = await response.data;
+    if (!response.status || response.status >= 400) {
         console.log("Failed to refresh token, response:", responseBody);
         return Result.error(new Error(`Failed to refresh token`));
     }

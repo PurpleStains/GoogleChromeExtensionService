@@ -1,7 +1,11 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { getToken, saveToken, __setTokensDbContextForTests, __resetTokensDbContextForTests } from './token-storage.js';
-import { AllegroTokenInternal } from '../../types/token.type.js';
 import { Timestamp } from '@google-cloud/firestore';
+import { AllegroTokenInternal } from '../../../../src/infrastructure/allegro/allegro.types.js';
+
+jest.mock('../../../database/tokens-repository.js', () => ({
+    tokensFirestoreDatabaseContext: jest.fn(),
+}));
 
 describe('token-storage', () => {
 

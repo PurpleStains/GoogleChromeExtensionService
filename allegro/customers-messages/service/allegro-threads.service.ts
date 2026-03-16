@@ -39,7 +39,6 @@ const listAllThreads = async (accessToken: string, knownOffset?: number, maxOffs
     return { Threads: allThreads, LastKnownOffset: offset };
 }
 
-
 const listMessages = async (threadId: string, accessToken: string): Promise<Message[]> => {
     const resp = await fetch(
         `https://api.allegro.pl/messaging/threads/${encodeURIComponent(threadId)}/messages`,
