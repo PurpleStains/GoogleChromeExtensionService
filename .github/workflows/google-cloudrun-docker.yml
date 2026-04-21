@@ -11,7 +11,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: cloud-run-production
@@ -61,14 +60,15 @@ jobs:
         uses: actions/checkout@v4
 
       - id: auth
-        name: Authenticate to Google Cloud
+        name: Authenticate to Google Cloud (JSON key)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Setup gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Configure Docker auth for Artifact Registry
         run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }} --quiet
