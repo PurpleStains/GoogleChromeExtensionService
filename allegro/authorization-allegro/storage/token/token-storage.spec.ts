@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { getToken, saveToken, __setTokensDbContextForTests, __resetTokensDbContextForTests } from './token-storage.js';
 import { AllegroTokenInternal } from '../../types/token.type.js';
 import { Timestamp } from '@google-cloud/firestore';
@@ -38,7 +38,7 @@ describe('token-storage', () => {
     const mockFirestoreFailure = {
         doc: jest.fn().mockReturnValue({
             get: jest.fn().mockReturnValue(mockDocSnapshotFailure),
-            set: jest.fn().mockRejectedValue(new Error('Failed to connect to the database while saving token')),
+            set: jest.fn<() => Promise<never>>().mockRejectedValue(new Error('Failed to connect to the database while saving token')),
         }),
     };
 
@@ -106,7 +106,7 @@ describe('token-storage', () => {
 
         it('should return error when exception occurs', async () => {
             const mockFirestore = {
-                doc: jest.fn().mockReturnValue({ get: jest.fn().mockRejectedValue(new Error('Database error')) }),
+                doc: jest.fn().mockReturnValue({ get: jest.fn<() => Promise<never>>().mockRejectedValue(new Error('Database error')) }),
             };
             __setTokensDbContextForTests(() => mockFirestore as any);
 
