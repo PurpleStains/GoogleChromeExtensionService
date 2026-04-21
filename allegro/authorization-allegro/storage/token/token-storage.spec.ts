@@ -1,12 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { getToken, saveToken } from './token-storage.js';
+import { getToken, saveToken, __setTokensDbContextForTests, __resetTokensDbContextForTests } from './token-storage.js';
 import { AllegroTokenInternal } from '../../types/token.type.js';
-import { tokensFirestoreDatabaseContext } from '../../../../database/tokens-repository.js';
 import { Timestamp } from '@google-cloud/firestore';
-
-jest.mock('../../../database/tokens-repository.js', () => ({
-    tokensFirestoreDatabaseContext: jest.fn(),
-}));
 
 describe('token-storage', () => {
 
@@ -43,7 +38,7 @@ describe('token-storage', () => {
     const mockFirestoreFailure = {
         doc: jest.fn().mockReturnValue({
             get: jest.fn().mockReturnValue(mockDocSnapshotFailure),
-            set: jest.fn().mockReturnValue(Promise.reject(new Error('Failed to connect to the database while saving token'))),
+            set: jest.fn().mockRejectedValue(new Error('Failed to connect to the database while saving token')),
         }),
     };
 
@@ -58,6 +53,7 @@ describe('token-storage', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        __resetTokensDbContextForTests();
     });
     afterEach(() => {
         jest.clearAllMocks();
@@ -65,7 +61,7 @@ describe('token-storage', () => {
 
     describe('getToken', () => {
         it('should successfully retrieve token when it exists', async () => {
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(mockFirestore as any);
+            __setTokensDbContextForTests(() => mockFirestore as any);
 
             const result = await getToken(mockClientLogin);
 
@@ -82,7 +78,7 @@ describe('token-storage', () => {
         });
 
         it('should return error when database connection fails', async () => {
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(null as any);
+            __setTokensDbContextForTests(() => null as any);
 
             const result = await getToken(mockClientLogin);
 
@@ -91,7 +87,7 @@ describe('token-storage', () => {
         });
 
         it('should return error when document does not exist', async () => {
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(mockFirestoreFailure as any);
+            __setTokensDbContextForTests(() => mockFirestoreFailure as any);
 
             const result = await getToken(mockClientLogin);
 
@@ -100,7 +96,7 @@ describe('token-storage', () => {
         });
 
         it('should return error when token for client does not exist', async () => {
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(mockFirestoreOtherClient as any);
+            __setTokensDbContextForTests(() => mockFirestoreOtherClient as any);
 
             const result = await getToken(mockClientLogin);
 
@@ -110,9 +106,9 @@ describe('token-storage', () => {
 
         it('should return error when exception occurs', async () => {
             const mockFirestore = {
-                doc: jest.fn().mockReturnValue({ get: jest.fn().mockReturnValue(Promise.reject(new Error('Database error'))) }),
+                doc: jest.fn().mockReturnValue({ get: jest.fn().mockRejectedValue(new Error('Database error')) }),
             };
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(mockFirestore as any);
+            __setTokensDbContextForTests(() => mockFirestore as any);
 
             const result = await getToken(mockClientLogin);
 
@@ -123,7 +119,7 @@ describe('token-storage', () => {
 
     describe('saveToken', () => {
         it('should successfully save token when document does not exist', async () => {
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(mockFirestoreEmpty as any);
+            __setTokensDbContextForTests(() => mockFirestoreEmpty as any);
 
             const result = await saveToken(mockClientLogin, mockToken);
 
@@ -131,7 +127,7 @@ describe('token-storage', () => {
         });
 
         it('should successfully save token when document exists but token does not', async () => {
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(mockFirestoreEmpty as any);
+            __setTokensDbContextForTests(() => mockFirestoreEmpty as any);
 
             const result = await saveToken(mockClientLogin, mockToken);
 
@@ -180,7 +176,7 @@ describe('token-storage', () => {
         });
 
         it('should return error when database connection fails', async () => {
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(null as any);
+            __setTokensDbContextForTests(() => null as any);
 
             const result = await saveToken(mockClientLogin, mockToken);
 
@@ -189,7 +185,7 @@ describe('token-storage', () => {
         });
 
         it('should return error when exception occurs during save', async () => {
-            jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(mockFirestoreFailure as any);
+            __setTokensDbContextForTests(() => mockFirestoreFailure as any);
 
             const result = await saveToken(mockClientLogin, mockToken);
 

@@ -3,10 +3,19 @@ import { Result } from "../../../../shared/result-pattern.js";
 import { AllegroTokenInternal, AllegroTokenResponse } from "../../types/token.type.js";
 
 const TOKENS_ID = "tokens-list";
+let getTokensDbContext = tokensFirestoreDatabaseContext;
+
+export const __setTokensDbContextForTests = (contextProvider: typeof tokensFirestoreDatabaseContext): void => {
+    getTokensDbContext = contextProvider;
+};
+
+export const __resetTokensDbContextForTests = (): void => {
+    getTokensDbContext = tokensFirestoreDatabaseContext;
+};
 
 export const clearTokens = async (): Promise<Result<void>> => {
     try {
-        const firestoreDb = tokensFirestoreDatabaseContext();
+        const firestoreDb = getTokensDbContext();
         if (!firestoreDb) {
             return Result.error(new Error("Failed to connect to the database while clearing tokens"));
         }
@@ -25,7 +34,7 @@ export const getToken = async (clientLogin: string): Promise<Result<AllegroToken
             return Result.error(new Error("Client login is required for token retrieval"));
         }
 
-        const firestoreDb = tokensFirestoreDatabaseContext();
+        const firestoreDb = getTokensDbContext();
         if (!firestoreDb) {
             return Result.error(new Error("Failed to connect to the database while getting token"));
         }
@@ -59,7 +68,7 @@ export const saveToken = async (clientLogin: string, token: AllegroTokenInternal
             return Result.error(new Error("Invalid token data"));
         }
 
-        const firestoreDb = tokensFirestoreDatabaseContext();
+        const firestoreDb = getTokensDbContext();
         if (!firestoreDb) {
             return Result.error(new Error("Failed to connect to the database while saving token"));
         }
