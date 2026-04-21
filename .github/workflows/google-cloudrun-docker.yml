@@ -54,6 +54,7 @@ jobs:
     needs: ci
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: ${{ vars.GITHUB_ENVIRONMENT || 'production' }}
     env:
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
