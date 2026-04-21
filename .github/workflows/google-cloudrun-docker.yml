@@ -52,15 +52,23 @@ jobs:
   deploy:
     name: Deploy to Cloud Run
     needs: ci
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY != ''
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate required secret
+        if: ${{ secrets.GCP_SA_KEY == '' }}
+        run: |
+          echo "Missing required secret: GCP_SA_KEY"
+          echo "Add repository secret GCP_SA_KEY with the full Service Account JSON content."
+          exit 1
+
       - id: auth
         name: Authenticate to Google Cloud (JSON key)
+        if: ${{ secrets.GCP_SA_KEY != '' }}
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
