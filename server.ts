@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { Firestore, FieldValue } from "@google-cloud/firestore";
-import { clearTokens } from './allegro/authorization-allegro/storage/token/token-storage.js';
+import { clearTokens } from './src/infrastructure/allegro/repositories/firestore-tokens.repository.js';
 import allegroClientsRouter from './src/presentation/routes/allegro.clients.routes.js';
 import allegroAuthRouter from './src/presentation/routes/allegro.auth.routes.js';
 import allegroCustomerMessagesRouter from './src/presentation/routes/allegro.messages.routes.js';

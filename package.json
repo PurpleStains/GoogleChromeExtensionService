@@ -6,6 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
+    "typecheck:domain": "tsc -p tsconfig.domain.json --noEmit",
     "start": "npm run build && node dist/server.js",
     "dev": "tsx watch server.ts",
     "clean": "rimraf dist",

@@ -29,7 +29,7 @@ export interface Message {
     createdAt: string;
     author: {
         login: string;
-        isInterlocutor: boolean;  // true = client, false = seller
+        isInterlocutor: boolean;
     };
     thread: { id: string };
     type: string;
@@ -42,6 +42,6 @@ export interface ClientMessages {
 }
 
 export interface AllThreadsResponse {
-    Threads: Thread[];
-    LastKnownOffset: number;
+    threads: Thread[];
+    lastKnownOffset: number;
 }

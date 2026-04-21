@@ -1,8 +1,8 @@
-import { Result } from "../../../../shared/result-pattern.js";
-import { getToken } from "./token-storage.js";
-import { isTokenExpired, prepareToken } from "./token.utils.js";
-import { refreshAndSaveToken } from "../../refresh-token/refresh-token.js";
-import { AllegroTokenInternal } from "../../../../src/infrastructure/allegro/allegro.types.js";
+import { Result } from "../../shared/patterns/result-pattern.js";
+import { AllegroTokenInternal } from "../../infrastructure/allegro/allegro.types.js";
+import { getToken } from "../../infrastructure/allegro/repositories/firestore-tokens.repository.js";
+import { isTokenExpired, prepareToken } from "../../infrastructure/allegro/utils/token.utils.js";
+import { refreshAndSaveToken } from "./token-refresh.service.js";
 
 export const getValidToken = async (clientLogin: string): Promise<Result<AllegroTokenInternal>> => {
     const getTokenResult = await getToken(clientLogin);
@@ -20,7 +20,8 @@ export const getValidToken = async (clientLogin: string): Promise<Result<Allegro
         const refreshTokenResult = await refreshAndSaveToken(clientLogin);
         if (refreshTokenResult.isFailure()) {
             return Result.error(
-                new Error(`Failed to refresh token for client ${clientLogin} ${refreshTokenResult.getError()?.message}`));
+                new Error(`Failed to refresh token for client ${clientLogin} ${refreshTokenResult.getError()?.message}`)
+            );
         }
 
         const tokenResponse = refreshTokenResult.getValue();
@@ -28,4 +29,4 @@ export const getValidToken = async (clientLogin: string): Promise<Result<Allegro
     }
 
     return Result.success(validToken);
-}
+};

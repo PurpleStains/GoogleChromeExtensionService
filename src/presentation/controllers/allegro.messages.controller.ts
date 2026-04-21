@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { recentBuyerThreads } from "../../../allegro/customers-messages/service/allegro-threads.service.js";
+import { recentBuyerThreads } from "../../application/services/messages.service.js";
 
 export const fetchCustomersMessages = async (req: Request, res: Response) => {
     const { client_login, customer_id } = req.query;
