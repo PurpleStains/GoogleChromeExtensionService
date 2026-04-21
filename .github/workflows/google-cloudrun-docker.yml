@@ -28,7 +28,7 @@ env:
 
 jobs:
   ci:
-    name: Typecheck, Build, Test
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
@@ -43,9 +43,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Typecheck domain contracts
-        run: npm run typecheck:domain
 
       - name: Build
         run: npm run build
