@@ -3,10 +3,6 @@ import { getToken, saveToken, __setTokensDbContextForTests, __resetTokensDbConte
 import { Timestamp } from '@google-cloud/firestore';
 import { AllegroTokenInternal } from '../../../../src/infrastructure/allegro/allegro.types.js';
 
-jest.mock('../../../database/tokens-repository.js', () => ({
-    tokensFirestoreDatabaseContext: jest.fn(),
-}));
-
 describe('token-storage', () => {
 
     const mockClientLogin = 'test-client';

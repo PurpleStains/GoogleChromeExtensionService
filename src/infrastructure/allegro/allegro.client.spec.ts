@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import axios from "axios";
 
 const requestUseMock = jest.fn();
 const responseUseMock = jest.fn();
@@ -9,17 +10,10 @@ const createMock = jest.fn(() => ({
     },
 }));
 
-jest.mock("axios", () => ({
-    __esModule: true,
-    default: {
-        create: createMock,
-    },
-    create: createMock,
-}));
-
 describe("allegroAxiosInstance", () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.spyOn(axios, "create").mockImplementation(createMock as any);
         delete process.env.ALLEGRO_API_BASE_URL;
     });
 

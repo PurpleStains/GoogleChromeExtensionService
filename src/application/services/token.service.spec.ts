@@ -1,23 +1,26 @@
 import { Timestamp } from "@google-cloud/firestore";
 import { Result } from "../../shared/patterns/result-pattern.js";
-import { getToken } from "../../infrastructure/allegro/repositories/firestore-tokens.repository.js";
-import { isTokenExpired, prepareToken } from "../../infrastructure/allegro/utils/token.utils.js";
-import { refreshAndSaveToken } from "./token-refresh.service.js";
-import { getValidToken } from "./token.service.js";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeAll, beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-jest.mock("../../infrastructure/allegro/repositories/firestore-tokens.repository.js", () => ({
-    getToken: jest.fn(),
+const getTokenMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
+const isTokenExpiredMock = jest.fn<(token: any) => boolean>();
+const prepareTokenMock = jest.fn<(tokenResponse: any) => any>();
+const refreshAndSaveTokenMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
+
+jest.unstable_mockModule("../../infrastructure/allegro/repositories/firestore-tokens.repository.js", () => ({
+    getToken: getTokenMock,
 }));
 
-jest.mock("../../infrastructure/allegro/utils/token.utils.js", () => ({
-    isTokenExpired: jest.fn(),
-    prepareToken: jest.fn(),
+jest.unstable_mockModule("../../infrastructure/allegro/utils/token.utils.js", () => ({
+    isTokenExpired: isTokenExpiredMock,
+    prepareToken: prepareTokenMock,
 }));
 
-jest.mock("./token-refresh.service.js", () => ({
-    refreshAndSaveToken: jest.fn(),
+jest.unstable_mockModule("./token-refresh.service.js", () => ({
+    refreshAndSaveToken: refreshAndSaveTokenMock,
 }));
+
+let getValidToken: (clientLogin: string) => Promise<any>;
 
 describe("getValidToken", () => {
     const clientLogin = "client-1";
@@ -41,12 +44,16 @@ describe("getValidToken", () => {
         expiresIn: new Timestamp(1800000000, 0),
     };
 
+    beforeAll(async () => {
+        ({ getValidToken } = await import("./token.service.js"));
+    });
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     it("should return failure when token retrieval fails", async () => {
-        jest.mocked(getToken).mockResolvedValue(Result.error(new Error("db error")));
+        getTokenMock.mockResolvedValue(Result.error(new Error("db error")));
 
         const result = await getValidToken(clientLogin);
 
@@ -55,7 +62,7 @@ describe("getValidToken", () => {
     });
 
     it("should return failure when token value is undefined", async () => {
-        jest.mocked(getToken).mockResolvedValue(Result.success(undefined as any));
+        getTokenMock.mockResolvedValue(Result.success(undefined as any));
 
         const result = await getValidToken(clientLogin);
 
@@ -64,21 +71,21 @@ describe("getValidToken", () => {
     });
 
     it("should return existing token when it is not expired", async () => {
-        jest.mocked(getToken).mockResolvedValue(Result.success(existingToken));
-        jest.mocked(isTokenExpired).mockReturnValue(false);
+        getTokenMock.mockResolvedValue(Result.success(existingToken));
+        isTokenExpiredMock.mockReturnValue(false);
 
         const result = await getValidToken(clientLogin);
 
         expect(result.isSuccess()).toBe(true);
         expect(result.getValue()).toEqual(existingToken);
-        expect(refreshAndSaveToken).not.toHaveBeenCalled();
-        expect(prepareToken).not.toHaveBeenCalled();
+        expect(refreshAndSaveTokenMock).not.toHaveBeenCalled();
+        expect(prepareTokenMock).not.toHaveBeenCalled();
     });
 
     it("should return failure when refresh fails for expired token", async () => {
-        jest.mocked(getToken).mockResolvedValue(Result.success(existingToken));
-        jest.mocked(isTokenExpired).mockReturnValue(true);
-        jest.mocked(refreshAndSaveToken).mockResolvedValue(Result.error(new Error("refresh failed")));
+        getTokenMock.mockResolvedValue(Result.success(existingToken));
+        isTokenExpiredMock.mockReturnValue(true);
+        refreshAndSaveTokenMock.mockResolvedValue(Result.error(new Error("refresh failed")));
 
         const result = await getValidToken(clientLogin);
 
@@ -87,16 +94,16 @@ describe("getValidToken", () => {
     });
 
     it("should return prepared token when refresh succeeds", async () => {
-        jest.mocked(getToken).mockResolvedValue(Result.success(existingToken));
-        jest.mocked(isTokenExpired).mockReturnValue(true);
-        jest.mocked(refreshAndSaveToken).mockResolvedValue(Result.success(refreshedTokenResponse));
-        jest.mocked(prepareToken).mockReturnValue(preparedToken);
+        getTokenMock.mockResolvedValue(Result.success(existingToken));
+        isTokenExpiredMock.mockReturnValue(true);
+        refreshAndSaveTokenMock.mockResolvedValue(Result.success(refreshedTokenResponse));
+        prepareTokenMock.mockReturnValue(preparedToken);
 
         const result = await getValidToken(clientLogin);
 
         expect(result.isSuccess()).toBe(true);
         expect(result.getValue()).toEqual(preparedToken);
-        expect(refreshAndSaveToken).toHaveBeenCalledWith(clientLogin);
-        expect(prepareToken).toHaveBeenCalledWith(refreshedTokenResponse);
+        expect(refreshAndSaveTokenMock).toHaveBeenCalledWith(clientLogin);
+        expect(prepareTokenMock).toHaveBeenCalledWith(refreshedTokenResponse);
     });
 });

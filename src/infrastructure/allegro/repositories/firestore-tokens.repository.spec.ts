@@ -1,14 +1,20 @@
 import { Timestamp } from "@google-cloud/firestore";
-import { tokensFirestoreDatabaseContext } from "../../database/firestore/tokens-context.js";
-import { FirestoreTokensRepository } from "./firestore-tokens.repository.js";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeAll, beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-jest.mock("../../database/firestore/tokens-context.js", () => ({
-    tokensFirestoreDatabaseContext: jest.fn(),
+const tokensFirestoreDatabaseContextMock = jest.fn();
+
+jest.unstable_mockModule("../../database/firestore/tokens-context.js", () => ({
+    tokensFirestoreDatabaseContext: tokensFirestoreDatabaseContextMock,
 }));
 
+let FirestoreTokensRepository: new () => {
+    clear: () => Promise<any>;
+    findByClientLogin: (clientLogin: string) => Promise<any>;
+    save: (clientLogin: string, token: any) => Promise<any>;
+};
+
 describe("FirestoreTokensRepository", () => {
-    const repository = new FirestoreTokensRepository();
+    let repository: InstanceType<typeof FirestoreTokensRepository>;
     const clientLogin = "client-1";
     const token = {
         accessToken: "access",
@@ -54,11 +60,16 @@ describe("FirestoreTokensRepository", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        repository = new FirestoreTokensRepository();
+    });
+
+    beforeAll(async () => {
+        ({ FirestoreTokensRepository } = await import("./firestore-tokens.repository.js"));
     });
 
     it("clear should return success when delete succeeds", async () => {
         const firestore = createFirestoreMock();
-        jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(firestore as any);
+        tokensFirestoreDatabaseContextMock.mockReturnValue(firestore as any);
 
         const result = await repository.clear();
 
@@ -69,7 +80,7 @@ describe("FirestoreTokensRepository", () => {
     });
 
     it("clear should return error when db context is missing", async () => {
-        jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(null as any);
+        tokensFirestoreDatabaseContextMock.mockReturnValue(null as any);
 
         const result = await repository.clear();
 
@@ -82,7 +93,7 @@ describe("FirestoreTokensRepository", () => {
             exists: true,
             data: { [clientLogin]: token },
         });
-        jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(firestore as any);
+        tokensFirestoreDatabaseContextMock.mockReturnValue(firestore as any);
 
         const result = await repository.findByClientLogin(clientLogin);
 
@@ -99,7 +110,7 @@ describe("FirestoreTokensRepository", () => {
 
     it("findByClientLogin should return error when token list doc does not exist", async () => {
         const firestore = createFirestoreMock({ exists: false });
-        jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(firestore as any);
+        tokensFirestoreDatabaseContextMock.mockReturnValue(firestore as any);
 
         const result = await repository.findByClientLogin(clientLogin);
 
@@ -109,7 +120,7 @@ describe("FirestoreTokensRepository", () => {
 
     it("save should persist token and return success", async () => {
         const firestore = createFirestoreMock({ exists: true, data: {} });
-        jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(firestore as any);
+        tokensFirestoreDatabaseContextMock.mockReturnValue(firestore as any);
 
         const result = await repository.save(clientLogin, token);
 
@@ -134,7 +145,7 @@ describe("FirestoreTokensRepository", () => {
             data: {},
             throwOnSet: "set failed",
         });
-        jest.mocked(tokensFirestoreDatabaseContext).mockReturnValue(firestore as any);
+        tokensFirestoreDatabaseContextMock.mockReturnValue(firestore as any);
 
         const result = await repository.save(clientLogin, token);
 
