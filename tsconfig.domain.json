@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/domain/**/*.ts",
+    "src/domain/**/*.typecheck.ts",
+    "src/infrastructure/**/*.ts",
+    "src/shared/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

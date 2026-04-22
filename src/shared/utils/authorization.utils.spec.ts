@@ -1,4 +1,4 @@
-import { base64UrlEncode, generateCodeVerifier, generateCodeChallenge } from '../../../allegro/authorization-allegro/utils/authorization.utils.js';
+import { base64UrlEncode, generateCodeVerifier, generateCodeChallenge } from './authorization.utils.js';
 import crypto from 'crypto';
 import { describe, it, expect } from '@jest/globals';
 
