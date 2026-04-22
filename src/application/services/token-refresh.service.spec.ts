@@ -2,11 +2,11 @@ import { beforeAll, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { Timestamp } from "@google-cloud/firestore";
 import { Result } from "../../shared/patterns/result-pattern.js";
 
-const getClientByLoginMock = jest.fn();
-const getTokenMock = jest.fn();
-const saveTokenMock = jest.fn();
-const allegroAxiosInstanceMock = jest.fn();
-const prepareTokenMock = jest.fn();
+const getClientByLoginMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
+const getTokenMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
+const saveTokenMock = jest.fn<(clientLogin: string, token: any) => Promise<Result<void>>>();
+const allegroAxiosInstanceMock = jest.fn<(credentials: string) => { post: (...args: any[]) => Promise<any> }>();
+const prepareTokenMock = jest.fn<(tokenResponse: any) => any>();
 
 jest.unstable_mockModule("./clients.service.js", () => ({
     clientsService: {
