@@ -49,7 +49,7 @@ app.get("/", (_req, res) => res.json({ service: "catalog-api-firestore", status:
 app.get("/has-send-catalog", async (req, res) => {
     try {
         const nip = String(req.query.nip || "");
-        if (!isValidNip(nip)) return res.status(400).json({ error: "Invalid NIP (must be 10 digits)" });
+        if (!isValidNip(nip)) return res.status(200).json({ error: "Invalid NIP (must be 10 digits)" });
 
         const doc = await catalogs.doc(nip).get();
         const hasSend = doc.exists ? !!doc.data()?.hasSend : false;
@@ -64,7 +64,7 @@ app.get("/has-send-catalog", async (req, res) => {
 app.post("/send-catalog", async (req, res) => {
     try {
         const nip = String(req.body.nip || "");
-        if (!isValidNip(nip)) return res.status(400).json({ error: "Invalid NIP (must be 10 digits)" });
+        if (!isValidNip(nip)) return res.status(200).json({ error: "Invalid NIP (must be 10 digits)" });
 
         // Idempotentny upsert: ustaw hasSend=true, aktualizuj timestampy
         await catalogs.doc(nip).set(
@@ -93,7 +93,7 @@ app.post("/send-catalog", async (req, res) => {
 app.post("/unsend-catalog", async (req, res) => {
     try {
         const nip = String(req.body.nip || "");
-        if (!isValidNip(nip)) return res.status(400).json({ error: "Invalid NIP (must be 10 digits)" });
+        if (!isValidNip(nip)) return res.status(200).json({ error: "Invalid NIP (must be 10 digits)" });
 
         await catalogs.doc(nip).set(
             {
