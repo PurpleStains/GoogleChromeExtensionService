@@ -53,7 +53,7 @@ jobs:
   deploy:
     name: Deploy to Cloud Run
     needs: ci
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     environment: ${{ vars.GITHUB_ENVIRONMENT || 'production' }}
     env:
