@@ -5,7 +5,9 @@ import { clientsService } from "./clients.service.js";
 import { getToken, saveToken } from "../../infrastructure/allegro/repositories/firestore-tokens.repository.js";
 import { prepareToken } from "../../infrastructure/allegro/utils/token.utils.js";
 
-export const refreshAndSaveToken = async (clientLogin: string): Promise<Result<AllegroTokenResponse>> => {
+const inFlightRefreshes = new Map<string, Promise<Result<AllegroTokenResponse>>>();
+
+const executeRefresh = async (clientLogin: string): Promise<Result<AllegroTokenResponse>> => {
     const clientResult = await clientsService.getClientByLogin(clientLogin);
     if (clientResult.isFailure()) {
         return Result.error(new Error(clientResult.getError()?.message));
@@ -42,4 +44,16 @@ export const refreshAndSaveToken = async (clientLogin: string): Promise<Result<A
     }
 
     return Result.success(refreshToken);
+};
+
+export const refreshAndSaveToken = (clientLogin: string): Promise<Result<AllegroTokenResponse>> => {
+    const existing = inFlightRefreshes.get(clientLogin);
+    if (existing) return existing;
+
+    const promise = executeRefresh(clientLogin).finally(() => {
+        inFlightRefreshes.delete(clientLogin);
+    });
+
+    inFlightRefreshes.set(clientLogin, promise);
+    return promise;
 };

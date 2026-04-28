@@ -130,4 +130,62 @@ describe("refreshAndSaveToken", () => {
         expect(result.isFailure()).toBe(true);
         expect(result.getError()?.message).toContain("Failed to save refreshed token: save failed");
     });
+
+    describe("deduplication", () => {
+        it("concurrent calls for the same client share one HTTP request", async () => {
+            getClientByLoginMock.mockResolvedValue(Result.success(clientData));
+            getTokenMock.mockResolvedValue(Result.success(internalToken));
+            postMock.mockResolvedValue({ status: 200, data: refreshResponse });
+            prepareTokenMock.mockReturnValue(internalToken);
+            saveTokenMock.mockResolvedValue(Result.success());
+
+            const [result1, result2] = await Promise.all([
+                refreshAndSaveToken(clientLogin),
+                refreshAndSaveToken(clientLogin),
+            ]);
+
+            expect(postMock).toHaveBeenCalledTimes(1);
+            expect(result1.isSuccess()).toBe(true);
+            expect(result2.isSuccess()).toBe(true);
+            expect(result1.getValue()).toEqual(refreshResponse);
+            expect(result2.getValue()).toEqual(refreshResponse);
+        });
+
+        it("concurrent calls for different clients are independent", async () => {
+            const clientData2 = { clientLogin: "client-2", clientId: "id-2", clientSecret: "secret-2" };
+
+            getClientByLoginMock.mockResolvedValue(Result.success(clientData));
+            getTokenMock.mockResolvedValue(Result.success(internalToken));
+            postMock.mockResolvedValue({ status: 200, data: refreshResponse });
+            prepareTokenMock.mockReturnValue(internalToken);
+            saveTokenMock.mockResolvedValue(Result.success());
+
+            const [result1, result2] = await Promise.all([
+                refreshAndSaveToken(clientLogin),
+                refreshAndSaveToken(clientData2.clientLogin),
+            ]);
+
+            expect(postMock).toHaveBeenCalledTimes(2);
+            expect(result1.isSuccess()).toBe(true);
+            expect(result2.isSuccess()).toBe(true);
+        });
+
+        it("a failed refresh cleans up so the next call retries", async () => {
+            getClientByLoginMock.mockResolvedValueOnce(Result.error(new Error("network error")));
+
+            const result1 = await refreshAndSaveToken(clientLogin);
+            expect(result1.isFailure()).toBe(true);
+            expect(postMock).toHaveBeenCalledTimes(0);
+
+            getClientByLoginMock.mockResolvedValueOnce(Result.success(clientData));
+            getTokenMock.mockResolvedValueOnce(Result.success(internalToken));
+            postMock.mockResolvedValueOnce({ status: 200, data: refreshResponse });
+            prepareTokenMock.mockReturnValueOnce(internalToken);
+            saveTokenMock.mockResolvedValueOnce(Result.success());
+
+            const result2 = await refreshAndSaveToken(clientLogin);
+            expect(result2.isSuccess()).toBe(true);
+            expect(postMock).toHaveBeenCalledTimes(1);
+        });
+    });
 });
