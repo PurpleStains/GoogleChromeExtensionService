@@ -1,5 +1,4 @@
 import { Result } from "../../shared/patterns/result-pattern.js";
-import { refreshAndSaveToken } from "./token-refresh.service.js";
 import { getValidToken } from "./token.service.js";
 import { AllThreadsResponse, ClientMessages, Message, Thread, ThreadsResponse } from "../../infrastructure/allegro/types/messages.types.js";
 
