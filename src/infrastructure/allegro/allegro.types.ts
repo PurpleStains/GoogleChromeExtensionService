@@ -45,3 +45,10 @@ export type ClientDataUpdate = {
     isAuthorized: boolean;
 }
 
+export type CatalogData = {
+    nip: string;
+    hasSend: boolean;
+    updatedAt?: Timestamp;
+    createdAt?: Timestamp;
+}
+

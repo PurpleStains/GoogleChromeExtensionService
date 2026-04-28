@@ -3,14 +3,9 @@ import { Timestamp } from "@google-cloud/firestore";
 import { Result } from "../../shared/patterns/result-pattern.js";
 
 const getValidTokenMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
-const refreshAndSaveTokenMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
 
 jest.unstable_mockModule("./token.service.js", () => ({
     getValidToken: getValidTokenMock,
-}));
-
-jest.unstable_mockModule("./token-refresh.service.js", () => ({
-    refreshAndSaveToken: refreshAndSaveTokenMock,
 }));
 
 let recentBuyerThreads: (clientLogin: string, clientId: string) => Promise<any>;
@@ -23,14 +18,6 @@ describe("recentBuyerThreads", () => {
         accessToken: "access-token",
         refreshToken: "refresh-token",
         expiresIn: new Timestamp(1800000000, 0),
-    };
-
-    const refreshResponse = {
-        access_token: "new-access",
-        refresh_token: "new-refresh",
-        expires_in: 3600,
-        allegro_api: true,
-        iss: "allegro",
     };
 
     beforeAll(async () => {
@@ -55,22 +42,11 @@ describe("recentBuyerThreads", () => {
         expect(result.getError()?.message).toBe("Unrecognized client login or token retrieval failed");
     });
 
-    it("should return failure when refresh token fails", async () => {
-        getValidTokenMock.mockResolvedValue(Result.success(validToken));
-        refreshAndSaveTokenMock.mockResolvedValue(Result.error(new Error("refresh failed")));
-
-        const result = await recentBuyerThreads(clientLogin, customerId);
-
-        expect(result.isFailure()).toBe(true);
-        expect(result.getError()?.message).toBe("Failed to refresh token for client");
-    });
-
     it("should return only recent messages for the selected customer", async () => {
         jest.useFakeTimers();
         jest.setSystemTime(new Date("2026-04-21T12:00:00.000Z"));
 
         getValidTokenMock.mockResolvedValue(Result.success(validToken));
-        refreshAndSaveTokenMock.mockResolvedValue(Result.success(refreshResponse));
 
         const fetchMock = jest.mocked(global.fetch as any);
         fetchMock
@@ -129,14 +105,12 @@ describe("recentBuyerThreads", () => {
         expect(result.getValue()).toEqual([
             expect.objectContaining({ id: "m-1", text: "recent message" }),
         ]);
-        expect(refreshAndSaveTokenMock).toHaveBeenCalledWith(clientLogin);
 
         jest.useRealTimers();
     });
 
     it("should throw when listing threads fails", async () => {
         getValidTokenMock.mockResolvedValue(Result.success(validToken));
-        refreshAndSaveTokenMock.mockResolvedValue(Result.success(refreshResponse));
 
         const fetchMock = jest.mocked(global.fetch as any);
         fetchMock.mockResolvedValueOnce({

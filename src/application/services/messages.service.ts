@@ -1,5 +1,4 @@
 import { Result } from "../../shared/patterns/result-pattern.js";
-import { refreshAndSaveToken } from "./token-refresh.service.js";
 import { getValidToken } from "./token.service.js";
 import { AllThreadsResponse, ClientMessages, Message, Thread, ThreadsResponse } from "../../infrastructure/allegro/types/messages.types.js";
 
@@ -74,10 +73,6 @@ export const recentBuyerThreads = async (clientLogin: string, clientId: string):
     }
 
     const { accessToken } = clientToken.getValue()!;
-    const refreshedTokenResult = await refreshAndSaveToken(clientLogin);
-    if (refreshedTokenResult.isFailure()) {
-        return Result.error(new Error("Failed to refresh token for client"));
-    }
 
     const recentOffset = 0;
     const defaultMaxOffset = 60;
