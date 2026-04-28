@@ -118,6 +118,26 @@ describe("FirestoreTokensRepository", () => {
         expect(result.getError()?.message).toBe("Tokens list does not exist");
     });
 
+    it("findByClientLogin should return error when token for client does not exist", async () => {
+        const firestore = createFirestoreMock({ exists: true, data: { "other-client": token } });
+        tokensFirestoreDatabaseContextMock.mockReturnValue(firestore as any);
+
+        const result = await repository.findByClientLogin(clientLogin);
+
+        expect(result.isFailure()).toBe(true);
+        expect(result.getError()?.message).toBe("Token for client does not exist");
+    });
+
+    it("findByClientLogin should return error when exception is thrown", async () => {
+        const firestore = createFirestoreMock({ throwOnGet: "Database error" });
+        tokensFirestoreDatabaseContextMock.mockReturnValue(firestore as any);
+
+        const result = await repository.findByClientLogin(clientLogin);
+
+        expect(result.isFailure()).toBe(true);
+        expect(result.getError()?.message).toBe("Database error");
+    });
+
     it("save should persist token and return success", async () => {
         const firestore = createFirestoreMock({ exists: true, data: {} });
         tokensFirestoreDatabaseContextMock.mockReturnValue(firestore as any);
@@ -129,7 +149,7 @@ describe("FirestoreTokensRepository", () => {
         expect((firestore._doc.set as any).mock.calls[0][0]).toEqual({ [clientLogin]: token });
     });
 
-    it("save should return error for invalid token", async () => {
+    it("save should return error for invalid token (missing accessToken)", async () => {
         const result = await repository.save(clientLogin, {
             ...token,
             accessToken: "",
@@ -137,6 +157,36 @@ describe("FirestoreTokensRepository", () => {
 
         expect(result.isFailure()).toBe(true);
         expect(result.getError()?.message).toBe("Invalid token data");
+    });
+
+    it("save should return error for null token", async () => {
+        const result = await repository.save(clientLogin, null as any);
+
+        expect(result.isFailure()).toBe(true);
+        expect(result.getError()?.message).toBe("Invalid token data");
+    });
+
+    it("save should return error for invalid token (missing refreshToken)", async () => {
+        const result = await repository.save(clientLogin, { ...token, refreshToken: "" });
+
+        expect(result.isFailure()).toBe(true);
+        expect(result.getError()?.message).toBe("Invalid token data");
+    });
+
+    it("save should return error for invalid token (missing expiresIn)", async () => {
+        const result = await repository.save(clientLogin, { ...token, expiresIn: null as any });
+
+        expect(result.isFailure()).toBe(true);
+        expect(result.getError()?.message).toBe("Invalid token data");
+    });
+
+    it("save should return error when db context is missing", async () => {
+        tokensFirestoreDatabaseContextMock.mockReturnValue(null as any);
+
+        const result = await repository.save(clientLogin, token);
+
+        expect(result.isFailure()).toBe(true);
+        expect(result.getError()?.message).toBe("Failed to connect to the database while saving token");
     });
 
     it("save should return propagated error when set throws", async () => {

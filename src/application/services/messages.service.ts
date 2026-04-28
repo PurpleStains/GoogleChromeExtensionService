@@ -74,10 +74,6 @@ export const recentBuyerThreads = async (clientLogin: string, clientId: string):
     }
 
     const { accessToken } = clientToken.getValue()!;
-    const refreshedTokenResult = await refreshAndSaveToken(clientLogin);
-    if (refreshedTokenResult.isFailure()) {
-        return Result.error(new Error("Failed to refresh token for client"));
-    }
 
     const recentOffset = 0;
     const defaultMaxOffset = 60;
