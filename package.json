@@ -14,7 +14,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@google-cloud/firestore": "^7.10.0",
+    "@google-cloud/firestore": "^8.5.0",
     "axios": "^1.13.6",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
