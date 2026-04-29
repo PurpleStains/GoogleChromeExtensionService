@@ -25,7 +25,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Zainstaluj tylko production dependencies
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts
 
 # Kopiuj zbudowane pliki z poprzedniego stage'a
 COPY --from=builder /usr/src/app/dist ./dist
