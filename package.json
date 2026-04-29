@@ -15,11 +15,13 @@
   },
   "dependencies": {
     "@google-cloud/firestore": "^8.5.0",
+    "@google-cloud/logging-winston": "^6.0.1",
     "axios": "^1.13.6",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^4.19.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
