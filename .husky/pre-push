@@ -1,0 +1,9 @@
+npm audit fix
+
+if ! git diff --quiet package.json package-lock.json; then
+    echo ""
+    echo "npm audit fix modified package files. Commit package.json and package-lock.json, then push again."
+    exit 1
+fi
+
+npm audit --audit-level=high
