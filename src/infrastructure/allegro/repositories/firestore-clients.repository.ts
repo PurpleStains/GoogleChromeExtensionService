@@ -4,6 +4,7 @@ import { isTokenExpired } from "../utils/token.utils.js";
 import { Result } from "../../../shared/patterns/result-pattern.js";
 import { ClientData, ClientsResponse } from "../allegro.types.js";
 import { IClientsRepository } from "../../../domain/repositories/clients.repository.js";
+import { logger } from "../../../shared/logger.js";
 
 const CLIENTS_DOC_ID = "clients-list";
 
@@ -29,6 +30,7 @@ export class FirestoreClientsRepository implements IClientsRepository {
 
             return Result.success(clientData);
         } catch (err) {
+            logger.error('FirestoreClientsRepository.findByLogin failed', { allegroLogin, stack: (err as Error).stack });
             return Result.error(err as Error);
         }
     }
@@ -69,6 +71,7 @@ export class FirestoreClientsRepository implements IClientsRepository {
 
             return Result.success({ clients: clientsWithAuth });
         } catch (err) {
+            logger.error('FirestoreClientsRepository.findAllWithAuthorizationStatus failed', { stack: (err as Error).stack });
             return Result.error(err as Error);
         }
     }
@@ -92,6 +95,7 @@ export class FirestoreClientsRepository implements IClientsRepository {
 
             return Result.success(client);
         } catch (err) {
+            logger.error('FirestoreClientsRepository.create failed', { clientLogin: client.clientLogin, stack: (err as Error).stack });
             return Result.error(err as Error);
         }
     }
@@ -121,6 +125,7 @@ export class FirestoreClientsRepository implements IClientsRepository {
 
             return Result.success();
         } catch (err) {
+            logger.error('FirestoreClientsRepository.updateAuthorizationStatus failed', { clientLogin, stack: (err as Error).stack });
             return Result.error(err as Error);
         }
     }

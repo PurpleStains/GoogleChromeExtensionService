@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { recentBuyerThreads } from "../../application/services/messages.service.js";
+import { logger } from '../../shared/logger.js';
 
 export const fetchCustomersMessages = async (req: Request, res: Response) => {
     const { client_login, customer_id } = req.query;
@@ -14,7 +15,7 @@ export const fetchCustomersMessages = async (req: Request, res: Response) => {
         return res.status(200).json(messagesResult.getValue());
     }
     catch (err) {
-        console.error("Error retrieving messages:", err);
+        logger.error('Error retrieving messages', { stack: err instanceof Error ? err.stack : String(err) });
         return res.status(500).json({ error: "Internal Server Error", details: err instanceof Error ? err.message : String(err) });
     }
 };

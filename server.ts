@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import { logger } from './src/shared/logger.js';
+import { globalErrorMiddleware } from './src/presentation/middleware/error.middleware.js';
 import { clearTokens } from './src/infrastructure/allegro/repositories/firestore-tokens.repository.js';
 import allegroClientsRouter from './src/presentation/routes/allegro.clients.routes.js';
 import allegroAuthRouter from './src/presentation/routes/allegro.auth.routes.js';
@@ -33,7 +35,8 @@ app.use(cors({
 }));
 app.options("*", cors({ origin: true, credentials: false }));
 app.use(express.json());
-app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+const morganStream = { write: (msg: string) => logger.http(msg.trim()) };
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev", { stream: morganStream }));
 
 app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 app.get("/", (_req, res) => res.json({ service: "catalog-api-firestore", status: "ok" }));
@@ -52,8 +55,10 @@ app.use("/allegro-client", allegroClientsRouter)
 app.use("/allegro-messages", allegroCustomerMessagesRouter)
 app.use("/", catalogsRouter)
 
+app.use(globalErrorMiddleware);
+
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    logger.info(`Server listening on port ${PORT}`);
 });
 
 

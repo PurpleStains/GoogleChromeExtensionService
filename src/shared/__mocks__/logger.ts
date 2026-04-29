@@ -1,0 +1,9 @@
+import { jest } from '@jest/globals';
+
+export const logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    http: jest.fn(),
+};
