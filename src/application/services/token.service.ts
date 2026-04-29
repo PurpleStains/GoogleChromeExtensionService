@@ -3,6 +3,7 @@ import { AllegroTokenInternal } from "../../infrastructure/allegro/allegro.types
 import { getToken } from "../../infrastructure/allegro/repositories/firestore-tokens.repository.js";
 import { isTokenExpired, prepareToken } from "../../infrastructure/allegro/utils/token.utils.js";
 import { refreshAndSaveToken } from "./token-refresh.service.js";
+import { logger } from "../../shared/logger.js";
 
 export const getValidToken = async (clientLogin: string): Promise<Result<AllegroTokenInternal>> => {
     const getTokenResult = await getToken(clientLogin);
@@ -17,6 +18,7 @@ export const getValidToken = async (clientLogin: string): Promise<Result<Allegro
 
     let validToken = existingToken;
     if (isTokenExpired(existingToken)) {
+        logger.debug('Token expired, triggering refresh', { clientLogin });
         const refreshTokenResult = await refreshAndSaveToken(clientLogin);
         if (refreshTokenResult.isFailure()) {
             return Result.error(

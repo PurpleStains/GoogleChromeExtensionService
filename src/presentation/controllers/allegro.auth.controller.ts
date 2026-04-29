@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { generateCodeChallenge, generateCodeVerifier } from "../../shared/utils/authorization.utils.js";
+import { logger } from '../../shared/logger.js';
 import { clientsService } from "../../application/services/clients.service.js";
 import crypto from 'crypto';
 import { refreshAndSaveToken } from "../../application/services/token-refresh.service.js";
@@ -38,6 +39,7 @@ export const allegroAuthorize = async (req: Request, res: Response) => {
     url.searchParams.set('state', client_login as string);
     url.searchParams.set('prompt', 'confirm');
 
+    logger.info('OAuth authorize initiated', { clientLogin: client_login });
     res.json({ url: url.toString() });
 };
 
@@ -84,6 +86,7 @@ export const allegroAuthCallback = async (req: Request, res: Response) => {
 
     await saveToken(clientLogin, tokenData);
     await clientsService.setClientAuthorizationStatus(clientLogin, true);
+    logger.info('OAuth authorization successful', { clientLogin });
     return res.status(200).json({ message: "Authorization successful, you can close this window now." });
 };
 
@@ -91,8 +94,10 @@ export const allegroRefreshToken = async (req: Request, res: Response) => {
     const { client_login } = req.body;
     const result = await refreshAndSaveToken(client_login as string);
     if (result.isFailure()) {
+        logger.warn('Token refresh failed via endpoint', { clientLogin: client_login, error: result.getError()?.message });
         return res.status(400).json({ error: result.getError()?.message });
     }
+    logger.info('Token refreshed via endpoint', { clientLogin: client_login });
     return res.status(200).json({ message: "Token refreshed successfully." });
 };
 

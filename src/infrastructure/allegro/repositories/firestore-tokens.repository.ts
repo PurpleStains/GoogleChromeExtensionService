@@ -2,6 +2,7 @@ import { tokensFirestoreDatabaseContext } from "../../database/firestore/tokens-
 import { Result } from "../../../shared/patterns/result-pattern.js";
 import { ITokensRepository } from "../../../domain/repositories/tokens.repository.js";
 import { AllegroTokenInternal } from "../allegro.types.js";
+import { logger } from "../../../shared/logger.js";
 
 const TOKENS_ID = "tokens-list";
 
@@ -17,6 +18,7 @@ export class FirestoreTokensRepository implements ITokensRepository {
 
             return Result.success();
         } catch (err) {
+            logger.error('FirestoreTokensRepository.clear failed', { stack: (err as Error).stack });
             return Result.error(err as Error);
         }
     }
@@ -46,6 +48,7 @@ export class FirestoreTokensRepository implements ITokensRepository {
 
             return Result.success(tokenData);
         } catch (err) {
+            logger.error('FirestoreTokensRepository.findByClientLogin failed', { clientLogin, stack: (err as Error).stack });
             return Result.error(err as Error);
         }
     }
@@ -73,6 +76,7 @@ export class FirestoreTokensRepository implements ITokensRepository {
 
             return Result.success();
         } catch (err) {
+            logger.error('FirestoreTokensRepository.save failed', { clientLogin, stack: (err as Error).stack });
             return Result.error(err as Error);
         }
     }
