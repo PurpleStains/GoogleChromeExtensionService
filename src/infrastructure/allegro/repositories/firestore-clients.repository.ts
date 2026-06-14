@@ -120,6 +120,7 @@ export class FirestoreClientsRepository implements IClientsRepository {
                 clientId: currentClientData.clientId,
                 clientSecret: currentClientData.clientSecret,
                 isAuthorized,
+                userAgent: currentClientData.userAgent,
             };
             await firestoreDb.doc(CLIENTS_DOC_ID).set(clients);
 

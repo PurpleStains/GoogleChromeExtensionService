@@ -60,8 +60,7 @@ export const allegroAuthCallback = async (req: Request, res: Response) => {
 
     const credentials = Buffer.from(`${clientData?.clientId}:${clientData?.clientSecret}`).toString('base64');
 
-
-    const httpClient = allegroAxiosInstance(credentials);
+    const httpClient = allegroAxiosInstance(credentials, clientData?.userAgent ?? "");
     const resp = await httpClient.post(TOKEN_URL_PATH, {
         grant_type: 'authorization_code',
         code: code,

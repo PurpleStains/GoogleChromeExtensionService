@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const allegroAxiosInstance = (credentials: string) => {
+export const allegroAxiosInstance = (credentials: string, userAgent: string) => {
     const baseURL = process.env.ALLEGRO_API_BASE_URL;
     const instance = axios.create({
         baseURL,
@@ -8,6 +8,7 @@ export const allegroAxiosInstance = (credentials: string) => {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             "Access-Control-Allow-Origin": "*",
+            'User-Agent': userAgent,
         },
     });
 

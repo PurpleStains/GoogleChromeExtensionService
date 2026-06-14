@@ -10,6 +10,7 @@ describe("ClientsService", () => {
         clientId: "id-1",
         clientSecret: "secret-1",
         isAuthorized: true,
+        userAgent: "TestAgent/1.0",
     };
 
     const repositoryMock: jest.Mocked<IClientsRepository> = {
