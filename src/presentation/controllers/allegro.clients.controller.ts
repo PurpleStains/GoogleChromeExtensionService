@@ -14,12 +14,13 @@ export const getAllClients = async (_req: Request, res: Response) => {
 };
 
 export const createAllegroClient = async (req: Request, res: Response) => {
-    const { client_login, client_id, client_secret } = req.body;
+    const { client_login, client_id, client_secret, user_agent } = req.body;
 
     const clientData: ClientData = {
         clientLogin: client_login as string,
         clientId: client_id as string,
         clientSecret: client_secret as string,
+        userAgent: user_agent as string,
     };
 
     const result = await clientsService.createClient(clientData);

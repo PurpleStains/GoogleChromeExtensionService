@@ -3,9 +3,16 @@ import { Timestamp } from "@google-cloud/firestore";
 import { Result } from "../../shared/patterns/result-pattern.js";
 
 const getValidTokenMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
+const getClientByLoginMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
 
 jest.unstable_mockModule("./token.service.js", () => ({
     getValidToken: getValidTokenMock,
+}));
+
+jest.unstable_mockModule("./clients.service.js", () => ({
+    clientsService: {
+        getClientByLogin: getClientByLoginMock,
+    },
 }));
 
 let recentBuyerThreads: (clientLogin: string, clientId: string) => Promise<any>;
@@ -27,6 +34,7 @@ describe("recentBuyerThreads", () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (global as any).fetch = jest.fn();
+        getClientByLoginMock.mockResolvedValue(Result.success({ userAgent: "test-user-agent" }));
     });
 
     afterEach(() => {

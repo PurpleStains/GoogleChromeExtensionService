@@ -38,6 +38,7 @@ export type ClientData = {
     clientId: string;
     clientSecret: string;
     isAuthorized?: boolean;
+    userAgent: string;
 }
 
 export type ClientDataUpdate = {

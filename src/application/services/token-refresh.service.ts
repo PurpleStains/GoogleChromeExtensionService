@@ -31,7 +31,8 @@ const executeRefresh = async (clientLogin: string): Promise<Result<AllegroTokenR
         refresh_token: token.getValue()?.refreshToken ?? "",
     });
 
-    const httpClient = allegroAxiosInstance(credentials);
+
+    const httpClient = allegroAxiosInstance(credentials, clientData.userAgent);
     const response = await httpClient.post("auth/oauth/token", params.toString());
     if (!response.status || response.status >= 400) {
         logger.error('Token refresh HTTP request failed', { clientLogin, status: response.status });
