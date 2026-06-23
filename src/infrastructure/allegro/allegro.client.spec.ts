@@ -10,6 +10,10 @@ const createMock = jest.fn(() => ({
     },
 }));
 
+jest.unstable_mockModule("../../shared/logger.js", () => ({
+    logger: { http: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+}));
+
 describe("allegroAxiosInstance", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -65,6 +69,60 @@ describe("allegroAxiosInstance", () => {
         const result = requestInterceptor(config);
 
         expect(result).toEqual(config);
+        expect(result.headers.Authorization).toBeUndefined();
+    });
+});
+
+describe("allegroApiAxiosInstance", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.spyOn(axios, "create").mockImplementation(createMock as any);
+    });
+
+    it("should create axios instance with expected defaults", async () => {
+        const { allegroApiAxiosInstance } = await import("./allegro.client.js");
+        allegroApiAxiosInstance("access-token", "TestAgent/1.0");
+
+        expect(createMock).toHaveBeenCalledTimes(1);
+        expect((createMock as any).mock.calls[0][0]).toEqual({
+            baseURL: "https://api.allegro.pl",
+            timeout: 60000,
+            headers: {
+                Accept: "application/vnd.allegro.public.v1+json",
+                "User-Agent": "TestAgent/1.0",
+            },
+        });
+    });
+
+    it("should register request and response interceptors", async () => {
+        const { allegroApiAxiosInstance } = await import("./allegro.client.js");
+        allegroApiAxiosInstance("access-token", "TestAgent/1.0");
+
+        expect(requestUseMock).toHaveBeenCalledTimes(1);
+        expect(responseUseMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("request interceptor should set Bearer Authorization header when token exists", async () => {
+        const { allegroApiAxiosInstance } = await import("./allegro.client.js");
+        allegroApiAxiosInstance("access-token", "TestAgent/1.0");
+
+        const requestInterceptor = requestUseMock.mock.calls[0][0] as (config: any) => any;
+        const config = { headers: {}, method: "get", url: "/messaging/threads" };
+
+        const result = requestInterceptor(config);
+
+        expect(result.headers.Authorization).toBe("Bearer access-token");
+    });
+
+    it("request interceptor should not set Authorization header when token is empty", async () => {
+        const { allegroApiAxiosInstance } = await import("./allegro.client.js");
+        allegroApiAxiosInstance("", "TestAgent/1.0");
+
+        const requestInterceptor = requestUseMock.mock.calls[0][0] as (config: any) => any;
+        const config = { headers: {}, method: "get", url: "/messaging/threads" };
+
+        const result = requestInterceptor(config);
+
         expect(result.headers.Authorization).toBeUndefined();
     });
 });
