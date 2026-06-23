@@ -1,9 +1,11 @@
+import axios, { AxiosInstance } from "axios";
 import { Result } from "../../shared/patterns/result-pattern.js";
 import { getValidToken } from "./token.service.js";
 import { AllThreadsResponse, ClientMessages, Message, Thread, ThreadsResponse } from "../../infrastructure/allegro/types/messages.types.js";
 import { clientsService } from "./clients.service.js";
+import { allegroApiAxiosInstance } from "../../infrastructure/allegro/allegro.client.js";
 
-const listAllThreads = async (accessToken: string, userAgent: string, knownOffset?: number, maxOffset?: number): Promise<AllThreadsResponse> => {
+const listAllThreads = async (httpClient: AxiosInstance, knownOffset?: number, maxOffset?: number): Promise<AllThreadsResponse> => {
     const allThreads: Thread[] = [];
     let offset = knownOffset ?? 0;
     const limit = 20;
@@ -11,19 +13,18 @@ const listAllThreads = async (accessToken: string, userAgent: string, knownOffse
     const resolvedMaxOffset = maxOffset ?? defaultMaxOffset;
 
     while (true) {
-        const response = await fetch(`https://api.allegro.pl/messaging/threads?offset=${offset}&limit=${limit}`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                Accept: "application/vnd.allegro.public.v1+json",
-                'User-Agent': userAgent,
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`listAllThreads failed at offset ${offset}: ${response.status} ${await response.text()}`);
+        let threadsResponse: ThreadsResponse;
+        try {
+            const response = await httpClient.get<ThreadsResponse>("/messaging/threads", {
+                params: { offset, limit },
+            });
+            threadsResponse = response.data;
+        } catch (err) {
+            const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+            const body = axios.isAxiosError(err) ? JSON.stringify(err.response?.data) : String(err);
+            throw new Error(`listAllThreads failed at offset ${offset}: ${status} ${body}`);
         }
 
-        const threadsResponse = await response.json() as ThreadsResponse;
         allThreads.push(...threadsResponse.threads);
 
         if (threadsResponse.threads.length < limit) {
@@ -40,29 +41,23 @@ const listAllThreads = async (accessToken: string, userAgent: string, knownOffse
     return { threads: allThreads, lastKnownOffset: offset };
 };
 
-const listMessages = async (threadId: string, accessToken: string, userAgent: string): Promise<Message[]> => {
-    const resp = await fetch(`https://api.allegro.pl/messaging/threads/${encodeURIComponent(threadId)}/messages`, {
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            Accept: "application/vnd.allegro.public.v1+json",
-            'User-Agent': userAgent,
-        },
-    });
-
-    if (!resp.ok) {
-        throw new Error(`listMessages failed: ${resp.status} ${await resp.text()}`);
+const listMessages = async (httpClient: AxiosInstance, threadId: string): Promise<Message[]> => {
+    try {
+        const response = await httpClient.get<ClientMessages>(`/messaging/threads/${encodeURIComponent(threadId)}/messages`);
+        return response.data.messages;
+    } catch (err) {
+        const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+        const body = axios.isAxiosError(err) ? JSON.stringify(err.response?.data) : String(err);
+        throw new Error(`listMessages failed: ${status} ${body}`);
     }
-
-    const clientMessages = await resp.json() as ClientMessages;
-    return clientMessages.messages;
 };
 
-const retrieveClientMessages = async (threads: Thread[], clientLogin: string, accessToken: string, userAgent: string): Promise<Message[]> => {
+const retrieveClientMessages = async (httpClient: AxiosInstance, threads: Thread[], clientLogin: string): Promise<Message[]> => {
     const relevantThreads = threads.filter((thread) => thread.interlocutor?.login === clientLogin);
     const clientMessages: Message[] = [];
 
     for (const thread of relevantThreads) {
-        const threadMessages = await listMessages(thread.id, accessToken, userAgent);
+        const threadMessages = await listMessages(httpClient, thread.id);
         clientMessages.push(...threadMessages.filter((message) => message.author?.login === clientLogin));
     }
 
@@ -80,10 +75,12 @@ export const recentBuyerThreads = async (clientLogin: string, clientId: string):
     const { accessToken } = clientToken.getValue()!;
     const { userAgent } = clientData.getValue()!;
 
+    const httpClient = allegroApiAxiosInstance(accessToken, userAgent);
+
     const recentOffset = 0;
     const defaultMaxOffset = 60;
-    const lastSixtyThreads = await listAllThreads(accessToken, userAgent, recentOffset, defaultMaxOffset);
-    const messages = await retrieveClientMessages(lastSixtyThreads.threads, clientId, accessToken, userAgent);
+    const lastSixtyThreads = await listAllThreads(httpClient, recentOffset, defaultMaxOffset);
+    const messages = await retrieveClientMessages(httpClient, lastSixtyThreads.threads, clientId);
 
     const now = new Date();
     const defaultDaysInPast = 7;

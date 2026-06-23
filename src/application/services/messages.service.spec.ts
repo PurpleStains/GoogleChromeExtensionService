@@ -4,6 +4,7 @@ import { Result } from "../../shared/patterns/result-pattern.js";
 
 const getValidTokenMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
 const getClientByLoginMock = jest.fn<(clientLogin: string) => Promise<Result<any>>>();
+const getMock = jest.fn<(...args: any[]) => Promise<any>>();
 
 jest.unstable_mockModule("./token.service.js", () => ({
     getValidToken: getValidTokenMock,
@@ -13,6 +14,10 @@ jest.unstable_mockModule("./clients.service.js", () => ({
     clientsService: {
         getClientByLogin: getClientByLoginMock,
     },
+}));
+
+jest.unstable_mockModule("../../infrastructure/allegro/allegro.client.js", () => ({
+    allegroApiAxiosInstance: () => ({ get: getMock }),
 }));
 
 let recentBuyerThreads: (clientLogin: string, clientId: string) => Promise<any>;
@@ -33,7 +38,6 @@ describe("recentBuyerThreads", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        (global as any).fetch = jest.fn();
         getClientByLoginMock.mockResolvedValue(Result.success({ userAgent: "test-user-agent" }));
     });
 
@@ -56,11 +60,9 @@ describe("recentBuyerThreads", () => {
 
         getValidTokenMock.mockResolvedValue(Result.success(validToken));
 
-        const fetchMock = jest.mocked(global.fetch as any);
-        fetchMock
+        getMock
             .mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({
+                data: {
                     limit: 20,
                     offset: 0,
                     threads: [
@@ -71,11 +73,10 @@ describe("recentBuyerThreads", () => {
                             interlocutor: { login: customerId, avatarUrl: "url" },
                         },
                     ],
-                }),
-            } as any)
+                },
+            })
             .mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({
+                data: {
                     limit: 20,
                     offset: 0,
                     messages: [
@@ -104,8 +105,8 @@ describe("recentBuyerThreads", () => {
                             type: "USER",
                         },
                     ],
-                }),
-            } as any);
+                },
+            });
 
         const result = await recentBuyerThreads(clientLogin, customerId);
 
@@ -120,12 +121,10 @@ describe("recentBuyerThreads", () => {
     it("should throw when listing threads fails", async () => {
         getValidTokenMock.mockResolvedValue(Result.success(validToken));
 
-        const fetchMock = jest.mocked(global.fetch as any);
-        fetchMock.mockResolvedValueOnce({
-            ok: false,
-            status: 500,
-            text: async () => "internal",
-        } as any);
+        getMock.mockRejectedValueOnce(Object.assign(new Error("boom"), {
+            isAxiosError: true,
+            response: { status: 500, data: "internal" },
+        }));
 
         await expect(recentBuyerThreads(clientLogin, customerId)).rejects.toThrow("listAllThreads failed");
     });
